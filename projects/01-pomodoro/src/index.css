@@ -1,2 +1,95 @@
 /* Tailwind v4 只需要这一行，不需要 tailwind.config.js */
 @import "tailwindcss";
+
+/* =========================================================================
+   Tailwind 常用类速查表
+   -------------------------------------------------------------------------
+   记法：1 单位 = 0.25rem = 4px。所以 p-4 = 16px、gap-6 = 24px。
+   下表覆盖了日常开发 90% 的场景，先熟悉这些就够了。
+
+   ── 一、布局（display / flex / grid）─────────────────────────────────────
+   flex             display: flex
+   grid             display: grid
+   block / inline-block / hidden        display: 对应值 / 隐藏元素
+   flex-col         flex-direction: column（默认是 row 横向）
+   flex-row         flex-direction: row
+   items-center     align-items: center            （交叉轴居中）
+   items-start / items-end                         （交叉轴上/下对齐）
+   justify-center   justify-content: center        （主轴居中）
+   justify-between  justify-content: space-between （两端顶开）
+   flex-1           flex: 1 1 0%（占满剩余空间，最常用！）
+   flex-wrap        flex-wrap: wrap（放不下时换行）
+   grid-cols-3      grid-template-columns: repeat(3, minmax(0,1fr))
+   col-span-2       grid-column: span 2 / span 2
+
+   ── 二、间距（padding / margin / gap）────────────────────────────────────
+   p-4   padding: 1rem                 px-4  padding-left/right: 1rem
+   py-3  padding-top/bottom: 0.75rem   pt-2 只设上边
+   m-4   margin: 1rem                  mx-auto 左右自动（配合 max-w 做居中）
+   mt-6  margin-top: 1.5rem            -mt-2 负值加前缀减号
+   gap-3 gap: 0.75rem（子元素之间，优先用它而不是 margin）
+   space-y-2  给所有子元素之间加纵向间距（编译成 & > * + * { margin-top }）
+
+   ── 三、尺寸（width / height）───────────────────────────────────────────
+   w-full    width: 100%               max-w-md   max-width: 28rem
+   w-64      width: 16rem              max-w-screen-lg
+   h-screen  height: 100vh             min-h-screen  min-height: 100vh
+   size-5    width + height 同时设 1.25rem（= w-5 h-5）
+
+   ── 四、排版（文字）────────────────────────────────────────────────────
+   text-xs 0.75rem │ text-sm 0.875rem │ text-base 1rem
+   text-lg 1.125rem │ text-xl 1.25rem │ text-2xl 1.5rem │ text-4xl 2.25rem
+   ※ 字号类会同时设置 line-height，不用再单独写 leading
+   font-normal 400 │ font-medium 500 │ font-semibold 600 │ font-bold 700
+   leading-6   line-height: 1.5rem
+   tracking-tight  letter-spacing: -0.025em（大字距收紧）
+   text-center / text-left / text-right
+   truncate    单行溢出省略号   line-clamp-2  多行溢出省略号
+   line-through 删除线   underline 下划线   italic 斜体
+
+   ── 五、颜色（背景 / 文字 / 边框）──────────────────────────────────────
+   色板：slate zinc gray（三种灰）· blue red emerald amber（彩色）
+   深浅：50 → 100 → 200 ... → 800 → 900 → 950，数字越大越深
+   bg-slate-900    background-color
+   text-slate-400  color
+   border-slate-800 border-color（必须和 border 一起用才看得见）
+   bg-transparent / text-white / border-transparent
+
+   ── 六、边框与圆角（border / radius）───────────────────────────────────
+   border       border-width: 1px       border-2   2px
+   border-t    只设上边框
+   rounded      border-radius: 0.25rem   rounded-lg  0.5rem
+   rounded-xl   0.75rem                  rounded-full 9999px（圆形/胶囊）
+   divide-y     给子元素之间加分割线
+
+   ── 七、交互状态（变体前缀，冒号语法）──────────────────────────────────
+   hover:bg-slate-800      鼠标悬停
+   focus:ring-2            键盘焦点（无障碍必备，别删）
+   active:scale-95         按下时
+   disabled:opacity-50     禁用时
+   transition-colors       颜色变化加过渡（不加就会很生硬）
+   transition-transform    尺寸/位移变化加过渡
+   duration-200            过渡时长 200ms
+   cursor-pointer          鼠标指针变手型
+
+   ── 八、响应式（移动优先，从前往后覆盖）───────────────────────────────
+   sm:  ≥640px    md:  ≥768px     lg:  ≥1024px    xl:  ≥1280px
+   示例：className="flex flex-col md:flex-row"
+         → 默认纵向堆叠（手机），≥768px 时横向排列（桌面）
+   ※ 口诀：不加前缀写手机样式，加前缀写大屏样式。
+
+   ── 九、定位与层级 ────────────────────────────────────────────────────
+   relative / absolute / fixed / sticky      position 值
+   inset-0           上右下左全部为 0（铺满父元素，常配 absolute）
+   top-2 right-2     指定方向偏移
+   z-10 / z-50       同层级堆叠顺序
+   overflow-hidden / overflow-y-auto         溢出处理
+
+   =========================================================================
+   两个新手最容易踩的坑：
+   1. border 和 border-颜色 是两个类，少了 border 就没有边框宽度，
+      只写颜色是看不见边框的。
+   2. 手写类名不会自动去重或排序，同类属性靠后者覆盖前者，
+      所以同一个元素别同时写 text-sm 和 text-lg（会按 CSS 优先级决定，
+      容易出意外）。条件切换时务必让两组类覆盖同一批属性。
+   ========================================================================= */
