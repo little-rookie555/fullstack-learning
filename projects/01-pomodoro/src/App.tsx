@@ -8,6 +8,19 @@ type Task = {
   done: boolean
 }
 
+// 筛选的三种取值。这是 TypeScript 的"字面量联合类型"：
+// Filter 只能是 'all' | 'active' | 'done' 这三个字符串之一，
+// 写成 'Active' 或 'complete' 会立刻报错。
+type Filter = 'all' | 'active' | 'done'
+
+// 筛选项的配置。用数组存起来，界面上就能用 map 渲染出三个按钮，
+// 而不用手写三遍几乎一样的 JSX。
+const FILTERS: { value: Filter; label: string }[] = [
+  { value: 'all', label: '全部' },
+  { value: 'active', label: '未完成' },
+  { value: 'done', label: '已完成' },
+]
+
 // 初始数据
 const initialTasks: Task[] = [
   { id: 1, title: '装好开发环境，跑起 npm run dev', done: true },
@@ -26,6 +39,7 @@ function createId() {
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [draft, setDraft] = useState('')
+  const [filter, setFilter] = useState<Filter>('all')
 
   function toggleTask(id: number) {
     setTasks((prev) =>
@@ -48,6 +62,26 @@ export default function App() {
   }
 
   const doneCount = tasks.filter((task) => task.done).length
+
+  // 派生数据：当前该显示哪些任务。
+  // 注意它是"算出来"的，不是 state —— 所以永远不可能和 tasks 对不上。
+  const visibleTasks = tasks.filter((task) => {
+    // TODO(你来写·第 1 处)：下面这两个判断写反了，请改对。
+    //   filter 是 'active' 时应该显示"未完成"的任务
+    //   filter 是 'done'   时应该显示"已完成"的任务
+    // 现在的症状：点"未完成"看到的是已完成的，点"已完成"看到的是未完成的。
+    if (filter === 'active') return task.done
+    if (filter === 'done') return !task.done
+    return true
+  })
+
+  // 每个筛选项对应的任务数量。这里复用了 doneCount，
+  // 所以"未完成数"用减法算，不用再 filter 一遍。
+  function countOf(value: Filter) {
+    if (value === 'all') return tasks.length
+    if (value === 'done') return doneCount
+    return tasks.length - doneCount
+  }
 
   return (
     <div className="app">
@@ -76,16 +110,42 @@ export default function App() {
         </button>
       </form>
 
-      <ul className="task-list">
-        {tasks.map((task) => (
-          <TaskItem
-            key={task.id}
-            task={task}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-          />
+      {/* 筛选栏：用 FILTERS 数组 map 出三个按钮 */}
+      <div className="filter-bar">
+        {FILTERS.map((item) => (
+          <button
+            key={item.value}
+            className={
+              filter === item.value
+                ? 'filter-button filter-button--active'
+                : 'filter-button'
+            }
+            type="button"
+            onClick={() => {
+              // TODO(你来写·第 2 处)：把当前选中的筛选项改成 item.value。
+              // 现在写死成 'all'，所以你点"未完成""已完成"都不会切换。
+              setFilter('all')
+            }}
+          >
+            {item.label} {countOf(item.value)}
+          </button>
         ))}
-      </ul>
+      </div>
+
+      {visibleTasks.length === 0 ? (
+        <p className="task-empty">没有符合条件的任务</p>
+      ) : (
+        <ul className="task-list">
+          {visibleTasks.map((task) => (
+            <TaskItem
+              key={task.id}
+              task={task}
+              onToggle={toggleTask}
+              onDelete={deleteTask}
+            />
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

@@ -64,6 +64,34 @@
   background: #6ee79b;
 }
 
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.filter-button {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #9a9aa8;
+  background: #26262e;
+  border: 1px solid #3a3a45;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.filter-button:hover {
+  border-color: #56566a;
+}
+
+.filter-button--active {
+  color: #14141a;
+  background: #4ade80;
+  border-color: #4ade80;
+}
+
 /* 任务列表 */
 .task-list {
   display: flex;
@@ -147,4 +175,15 @@
 .task-title--done {
   color: #71717f;
   text-decoration: line-through;
+}
+
+/* 列表为空时的提示 */
+.task-empty {
+  margin: 20px 0 0;
+  padding: 24px;
+  font-size: 14px;
+  text-align: center;
+  color: #71717f;
+  border: 1px dashed #3a3a45;
+  border-radius: 8px;
 }
