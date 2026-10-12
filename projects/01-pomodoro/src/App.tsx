@@ -43,6 +43,13 @@ export default function App() {
     setDraft('')
   }
 
+  function deleteTask(id: number) {
+    // TODO(你来写·第 1 处)：删掉 id 这一条任务。
+    // 提示：上面 toggleTask 用 map 是"改一项"，删掉一项要用 filter。
+    // 现在先用日志占位，这样你能确认按钮点到了、id 传对了。
+    console.log('准备删除，id =', id)
+  }
+
   const doneCount = tasks.filter((task) => task.done).length
 
   return (
@@ -74,7 +81,12 @@ export default function App() {
 
       <ul className="task-list">
         {tasks.map((task) => (
-          <TaskItem key={task.id} task={task} onToggle={toggleTask} />
+          <TaskItem
+            key={task.id}
+            task={task}
+            onToggle={toggleTask}
+            onDelete={deleteTask}
+          />
         ))}
       </ul>
     </div>
@@ -84,13 +96,14 @@ export default function App() {
 type TaskItemProps = {
   task: Task
   onToggle: (id: number) => void
+  onDelete: (id: number) => void
 }
 
-function TaskItem({ task, onToggle }: TaskItemProps) {
+function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
   return (
-    <li>
+    <li className="task-item">
       <button
-        className="task-item"
+        className="task-toggle"
         type="button"
         onClick={() => onToggle(task.id)}
       >
@@ -104,6 +117,21 @@ function TaskItem({ task, onToggle }: TaskItemProps) {
         <span className={task.done ? 'task-title--done' : ''}>
           {task.title}
         </span>
+      </button>
+
+      <button
+        className="task-delete"
+        type="button"
+        onClick={() => {
+          // TODO(你来写·第 2 处)：把下面的 0 换成正确的参数。
+          // 为什么我写了 0？因为如果这里不调用 onDelete，
+          // TypeScript 会报错说"onDelete 从未被使用"（noUnusedLocals 在保护你）。
+          // 先点一下删除按钮，打开浏览器控制台（F12），你会看到 "id = 0"，
+          // 这就说明参数传错了。想想应该传什么。
+          onDelete(0)
+        }}
+      >
+        删除
       </button>
     </li>
   )

@@ -74,24 +74,54 @@
   list-style: none;
 }
 
+/* 一条任务：外层容器只负责布局，不负责点击 */
 .task-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 16px;
-  font-family: inherit;
-  font-size: 15px;
-  text-align: left;
-  color: inherit;
+  gap: 4px;
+  padding: 4px;
   background: #26262e;
   border: 1px solid #3a3a45;
   border-radius: 8px;
-  cursor: pointer;
 }
 
 .task-item:hover {
   border-color: #56566a;
+}
+
+/* 点击切换完成的区域。flex: 1 让它吃掉所有剩余宽度，
+   于是删除按钮就被挤到最右边 —— 这就是 flex-1 的实际作用 */
+.task-toggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* 删除按钮 */
+.task-delete {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #9a9aa8;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.task-delete:hover {
+  color: #ff9c9c;
+  background: #3a2a2e;
 }
 
 /* 勾选框 */
