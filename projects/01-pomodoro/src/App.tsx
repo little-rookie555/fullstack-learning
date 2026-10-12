@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 /* =========================================================================
    Tailwind 到底是什么？
@@ -54,10 +54,26 @@ type Task = {
 
 const initialTasks: Task[] = [
   { id: 1, title: '装好开发环境，跑起 npm run dev', done: true },
-  { id: 2, title: '理解 JSX 到底是什么', done: false },
-  { id: 3, title: '把界面拆成组件', done: false },
-  { id: 4, title: '想明白 useState 为什么能刷新界面', done: false },
+  { id: 2, title: '理解 JSX 到底是什么。', done: false },
+  { id: 3, title: '把界面拆成组件。', done: false },
+  { id: 4, title: '想明白 useState 为什么能刷新界面。', done: false },
+  { id: 5, title: '把任务列表改成受控组件。', done: false },
 ]
+
+/* =========================================================
+   生成新任务的唯一 id
+   -------------------------------------------------------------------------
+   为什么需要它：<TaskItem key={task.id} /> 里的 key 必须唯一。
+   为什么不能用 tasks.length 当 id：
+     因为"删掉一条再新增"会算出重复的 id，React 会认错元素、界面错乱。
+   ※ 真实项目里 id 通常由数据库生成（自增主键或 UUID），这里先用计数器模拟。
+   ========================================================= */
+let idCounter = Math.max(...initialTasks.map((task) => task.id))
+
+function createId() {
+  idCounter += 1
+  return idCounter
+}
 
 /* =========================================================
    组件就是一个"返回 JSX 的函数"。
@@ -71,6 +87,25 @@ export default function App() {
      React 就是靠"你调用了 setTasks"这个信号，才知道要重新渲染。 */
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
 
+  /* 【本次新增 · 状态 2】draft = 输入框里"正在打的那行字"
+     -------------------------------------------------------------------------
+     判断标准很简单：界面上有东西会随时间变化，它就该是 state。
+     反过来，从头到尾都不变的东西，不要放进 state。
+     初始值是空字符串 ''，TypeScript 会据此推断它的类型是 string。 */
+  const [draft, setDraft] = useState('')
+
+  /* 【本次新增 · 工具】inputRef = 指向真实 <input> DOM 元素的"遥控器"
+     -------------------------------------------------------------------------
+     useRef 和 useState 的区别（重要）：
+       useState → 值变了，会触发重新渲染
+       useRef   → 值变了，不会触发重新渲染
+     我们只是想在添加完任务后调用元素自身的 .focus()，
+     不需要因为"拿到了这个元素"而重新渲染，所以用 useRef 而不是 useState。
+
+     类型里的 | null：首次渲染时元素还没被挂到页面上，所以可能是 null。
+     这就是下面要写 inputRef.current?.focus() 里那个 ? 的来源。 */
+  const inputRef = useRef<HTMLInputElement>(null)
+
   function toggleTask(id: number) {
     /* 这里演示了 React 里最常写的"更新数组里某一项"的写法。
        为什么不直接改？因为要造出一个"新数组"，
@@ -80,6 +115,34 @@ export default function App() {
         task.id === id ? { ...task, done: !task.done } : task,
       ),
     )
+  }
+
+  /* 【本次新增】添加任务
+     -------------------------------------------------------------------------
+     注意这里连着调用了两次 set（setTasks 和 setDraft）。
+     这是安全的：React 会把同一个事件处理函数里的多次更新合并成一次重新渲染，
+     界面不会中间闪一下。 */
+  function addTask() {
+    // 边界 1：trim() 去掉首尾空格后如果为空，就什么都不做。
+    // 不加这行的话能添加出一条"看不见的空任务"，白白占掉一个 id 和一行高度。
+    const title = draft.trim()
+    if (title === '') return
+
+    // 不可变新增：新数组 = 旧数组展开 + 新的一项。
+    // 为什么不能写 tasks.push(...)？
+    // 因为 push 是"原地修改"，数组引用没变，
+    // React 比较新旧状态时看到的是同一个引用，会认为没变化而跳过渲染。
+    // 记住这条规律：改对象用 {...}，改数组用 map / filter / [...展开]。
+    setTasks((prev) => [...prev, { id: createId(), title, done: false }])
+
+    // 清空输入框。
+    // 因为输入框是受控的（value={draft}），把 state 清空就等于清空输入框，
+    // 完全不需要去操作 DOM。这就是受控组件省事的地方。
+    setDraft('')
+
+    // 边界 2：把光标送回输入框，方便连续添加多条，不用每次都用鼠标点。
+    // current 可能是 null，?. 的意思是"如果它不是 null 才调用"。
+    inputRef.current?.focus()
   }
 
   // 派生数据：能算出来的就别再存一份状态，否则迟早不同步
@@ -130,13 +193,67 @@ export default function App() {
           </span>
         </header>
 
+        {/* 【本次新增】添加任务的表单
+        -------------------------------------------------------------------------
+        为什么用 <form> 而不是给按钮直接加 onClick？
+        因为 <form> 自带一个免费的好处：在输入框里按回车 = 提交。
+        否则用户必须用鼠标去点"添加"，这是很差的体验。
+
+        event.preventDefault() 是必须的！
+        <form> 的默认行为是"提交后刷新整个页面"，
+        在 React 里这会把所有 state 清空、界面闪一下回到初始状态。
+        preventDefault 就是"阻止默认行为"。
+        ------------------------------------------------------------------------- */}
+        <form
+          onSubmit={(event) => {
+            event.preventDefault()
+            addTask()
+          }}
+          className="mt-5 flex gap-2"
+        >
+          {/* 输入框 —— 受控组件
+              value={draft}    → 输入框显示什么，完全由 state 决定
+              onChange={...}   → 用户每敲一个字，就把新值写回 state
+
+              这两行加起来就叫"受控组件"，数据流是：
+                  敲键盘 → onChange → setDraft → 重新渲染 → 输入框显示新值
+              好处是 state 永远是唯一的真相：要做校验、清空、格式化，
+              都只需要操作 state，不用去操作 DOM。
+
+              className 里三个没见过的写法：
+                placeholder:text-slate-500 → 只给 placeholder 文字上色
+                focus:outline-none         → 去掉浏览器默认的黑色聚焦圈
+                focus:border-emerald-500   → 换成自己的绿色边框，明确告诉用户
+                                             "你现在打字打在这里"（别省这行，
+                                             键盘操作的人全靠它） */}
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder="添加一个新任务，回车确认"
+            className="flex-1 rounded-lg border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+          />
+
+          {/* 提交按钮
+                flex-1 给了输入框、按钮不设宽度 → 按钮按内容自适应，
+                输入框吃掉剩下的空间。这就是 flex 布局省心的地方，
+                不用算具体像素。
+                type="submit" → 点击它等于提交表单（会触发上面的 onSubmit） */}
+          <button
+            type="submit"
+            className="rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-medium text-slate-950 transition-colors hover:bg-emerald-400"
+          >
+            添加
+          </button>
+        </form>
+
         {/* 第 3 步：列表渲染。
             .map() 把"数据数组"翻译成"组件数组"。
             key 不是给用户看的，是给 React 用来识别每一项的身份的，
             换成索引做 key 会在增删时出现错位 bug。
 
             列表容器：
-              mt-6     → margin-top: 1.5rem（和上方标题拉开距离）
+              mt-6     → margin-top: 1.5rem（和上方表单拉开距离）
               space-y-2→ 给所有直接子元素加上"响应式纵向间距"
                          实际编译成：& > * + * { margin-top: 0.5rem }
                          它比让每个 <li> 自己写 mt-2 更干净，
