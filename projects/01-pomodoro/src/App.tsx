@@ -44,10 +44,7 @@ export default function App() {
   }
 
   function deleteTask(id: number) {
-    // TODO(你来写·第 1 处)：删掉 id 这一条任务。
-    // 提示：上面 toggleTask 用 map 是"改一项"，删掉一项要用 filter。
-    // 现在先用日志占位，这样你能确认按钮点到了、id 传对了。
-    console.log('准备删除，id =', id)
+    setTasks((prev) => prev.filter((task) => task.id !== id))
   }
 
   const doneCount = tasks.filter((task) => task.done).length
@@ -122,14 +119,7 @@ function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
       <button
         className="task-delete"
         type="button"
-        onClick={() => {
-          // TODO(你来写·第 2 处)：把下面的 0 换成正确的参数。
-          // 为什么我写了 0？因为如果这里不调用 onDelete，
-          // TypeScript 会报错说"onDelete 从未被使用"（noUnusedLocals 在保护你）。
-          // 先点一下删除按钮，打开浏览器控制台（F12），你会看到 "id = 0"，
-          // 这就说明参数传错了。想想应该传什么。
-          onDelete(0)
-        }}
+        onClick={() => onDelete(task.id)}
       >
         删除
       </button>
