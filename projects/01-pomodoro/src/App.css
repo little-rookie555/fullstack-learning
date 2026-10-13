@@ -22,6 +22,59 @@
   color: #9a9aa8;
 }
 
+/* 番茄钟 */
+.timer {
+  margin-top: 24px;
+  padding: 20px;
+  text-align: center;
+  background: #26262e;
+  border: 1px solid #3a3a45;
+  border-radius: 12px;
+}
+
+.timer-display {
+  margin: 0;
+  font-size: 48px;
+  /* tabular-nums：让所有数字等宽。
+     不加的话，倒计时从 11 变成 10 时，"1" 和 "0" 宽度不同，整块数字会左右抖动 */
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 2px;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.timer-button {
+  padding: 8px 20px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #14141a;
+  background: #4ade80;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.timer-button:hover {
+  background: #6ee79b;
+}
+
+/* 次要按钮：透明底 + 细边框 */
+.timer-button--ghost {
+  color: #9a9aa8;
+  background: none;
+  border: 1px solid #3a3a45;
+}
+
+.timer-button--ghost:hover {
+  color: #e9e9ee;
+  background: #2f2f38;
+}
+
 /* 添加任务的表单 */
 .task-form {
   display: flex;
