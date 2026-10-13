@@ -66,12 +66,8 @@ export default function App() {
   // 派生数据：当前该显示哪些任务。
   // 注意它是"算出来"的，不是 state —— 所以永远不可能和 tasks 对不上。
   const visibleTasks = tasks.filter((task) => {
-    // TODO(你来写·第 1 处)：下面这两个判断写反了，请改对。
-    //   filter 是 'active' 时应该显示"未完成"的任务
-    //   filter 是 'done'   时应该显示"已完成"的任务
-    // 现在的症状：点"未完成"看到的是已完成的，点"已完成"看到的是未完成的。
-    if (filter === 'active') return task.done
-    if (filter === 'done') return !task.done
+    if (filter === 'active') return !task.done
+    if (filter === 'done') return task.done
     return true
   })
 
@@ -121,11 +117,7 @@ export default function App() {
                 : 'filter-button'
             }
             type="button"
-            onClick={() => {
-              // TODO(你来写·第 2 处)：把当前选中的筛选项改成 item.value。
-              // 现在写死成 'all'，所以你点"未完成""已完成"都不会切换。
-              setFilter('all')
-            }}
+            onClick={() => setFilter(item.value)}
           >
             {item.label} {countOf(item.value)}
           </button>
