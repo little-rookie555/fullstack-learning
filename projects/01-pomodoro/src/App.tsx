@@ -85,24 +85,22 @@ export default function App() {
     setSecondsLeft(FOCUS_SECONDS)
   }
 
-  // 倒计时：只有 isRunning 为 true 时才创建定时器。
-  // 清理函数是必须的 —— 忘了它，每次重新执行都会多留一个定时器在跑，
-  // 现象是"暂停停不住"以及"再开始后一秒减 2"。
+  // effect 1：只管倒计时。更新函数是纯的 —— 只根据 prev 算新值，不产生副作用。
+  // 清理函数是必须的，忘了它就会出现"暂停停不住"和"再开始一秒减 2"。
   useEffect(() => {
     if (!isRunning) return
-
     const timerId = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev === 0) {
-          setIsRunning(false)
-          return 0
-        }
-        return prev - 1
-      })
+      setSecondsLeft((prev) => Math.max(prev - 1, 0))
     }, 1000)
-
     return () => clearInterval(timerId)
   }, [isRunning])
+
+  // effect 2：只管"到 0 就停"。
+  // 这里没有定时器、没有请求，只是"监听 secondsLeft 的变化"——
+  // 这是 useEffect 最常用的第二种形态。
+  useEffect(() => {
+    if (secondsLeft === 0) setIsRunning(false)
+  }, [secondsLeft])
 
   const doneCount = tasks.filter((task) => task.done).length
 
