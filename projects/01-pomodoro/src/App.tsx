@@ -35,26 +35,13 @@ function createId() {
 
 // 一个番茄的长度：25 分钟 = 1500 秒
 const FOCUS_SECONDS = 25 * 60
+// const FOCUS_SECONDS = 5
 
-// ===========================================================================
-// TODO(你来写·第 1 处)：把秒数格式化成 "mm:ss"
-// ---------------------------------------------------------------------------
-// 目标效果：
-//   1500 → "25:00"
-//   65   → "01:05"
-//   9    → "00:09"
-//
-// 提示（按顺序做）：
-//   1. 分钟 = Math.floor(totalSeconds / 60)
-//   2. 秒   = totalSeconds % 60
-//   3. 补零：String(值).padStart(2, '0')
-//      padStart 的意思是"不足 2 位就在前面补 '0'"
-//   4. 最后用模板字符串拼起来：`${分钟}:${秒}`
-//
-// 现在这行是错的（界面上会显示 "1500" 这种数字），把它改对。
-// ===========================================================================
+// 把秒数格式化成 "mm:ss"，例如 1500 → "25:00"
 function formatTime(totalSeconds: number) {
-  return String(totalSeconds)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 export default function App() {
@@ -86,17 +73,9 @@ export default function App() {
     setTasks((prev) => prev.filter((task) => task.id !== id))
   }
 
-  // =========================================================================
-  // TODO(你来写·第 3 处)：开始 / 暂停
-  // -------------------------------------------------------------------------
-  // 要做的事情只有一件：把 isRunning 取反。
-  // 提示：用函数形式 setIsRunning((prev) => !prev)
-  //
-  // 注意按钮文字会自己跟着变（isRunning 为 true 时显示"暂停"），
-  // 你不需要手动改按钮 —— 那部分已经在 JSX 里写好了。
-  // =========================================================================
+  // 开始 / 暂停
   function toggleRunning() {
-    // 在下面写
+    setIsRunning((prev) => !prev)
   }
 
   // 重置：恢复成 25 分钟并停止计时
@@ -106,37 +85,24 @@ export default function App() {
     setSecondsLeft(FOCUS_SECONDS)
   }
 
-  // =========================================================================
-  // TODO(你来写·第 2 处)：倒计时的核心 —— 本周最重要的一段代码
-  // -------------------------------------------------------------------------
-  // 步骤：
-  //   1. 如果 !isRunning，直接 return（不运行的时候就什么都不做）
-  //   2. 用 setInterval(要执行的函数, 1000) 每 1 秒执行一次
-  //      里面的逻辑是：setSecondsLeft((prev) => prev - 1)
-  //   3. setInterval 会返回一个"定时器编号"，
-  //      把它存到变量里，例如 const timerId = setInterval(...)
-  //   4. 最后 return 一个函数，在里面调用 clearInterval(timerId)
-  //
-  // 关于第 4 步（关键）：
-  //   这个被 return 出去的函数叫"清理函数"。
-  //   React 会在两个时机替你调用它：
-  //     a) 下次要重新执行这个 effect 之前
-  //     b) 组件被卸载时
-  //   如果忘了写它，每次重新执行都会多留下一个定时器在跑，
-  //   现象是：暂停再开始，数字越跳越快（一秒减 2、减 3 ……）
-  //
-  // 依赖数组 [isRunning] 我写好了：意思是"只有 isRunning 变了才重新执行这个 effect"。
-  // 所以点开始 → effect 重跑 → 建定时器；点暂停 → 清理函数被调用 → 定时器停掉。
-  // =========================================================================
+  // 倒计时：只有 isRunning 为 true 时才创建定时器。
+  // 清理函数是必须的 —— 忘了它，每次重新执行都会多留一个定时器在跑，
+  // 现象是"暂停停不住"以及"再开始后一秒减 2"。
   useEffect(() => {
     if (!isRunning) return
 
-    // 在下面写第 2、3、4 步
-  }, [isRunning])
+    const timerId = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev === 0) {
+          setIsRunning(false)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
 
-  // 进阶挑战（可选）：
-  //   现在倒计时会一直减成负数。让它到 0 就自动停下，并确保按钮变回"开始"。
-  //   提示：可以在 setSecondsLeft 的更新函数里判断，也可以再加一个 effect。
+    return () => clearInterval(timerId)
+  }, [isRunning])
 
   const doneCount = tasks.filter((task) => task.done).length
 
