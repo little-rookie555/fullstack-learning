@@ -95,12 +95,13 @@ src/
 ### 部署命令
 
 ```bash
-npm run build                              # 生产构建
 tcb env use my-study-d3gp0xf9k10ac193e     # 绑定环境（只需一次）
-tcb hosting deploy ./dist --verify         # 上传并校验
+npm run deploy                             # 构建 + 上传 + 校验，一条命令
 ```
 
-> `tcb hosting deploy` 只上传文件、不做构建，所以**必须先 `npm run build`**。
+`npm run deploy` 等价于 `npm run build && tcb hosting deploy ./dist --verify`。
+
+> 注意：`tcb hosting deploy` 只上传文件、不做构建，所以**构建这一步不能省**（已包在 `npm run deploy` 里）。
 
 ### 换其他平台的话
 
