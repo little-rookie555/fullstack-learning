@@ -18,7 +18,7 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: 'done', label: '已完成' },
 ]
 
-// 初始数据
+// 初始数据（只在第一次打开、或本地数据坏掉时使用）
 const initialTasks: Task[] = [
   { id: 1, title: '装好开发环境，跑起 npm run dev', done: true },
   { id: 2, title: '理解 JSX 是什么', done: false },
@@ -28,86 +28,33 @@ const initialTasks: Task[] = [
 // 一个番茄的长度：25 分钟 = 1500 秒
 const FOCUS_SECONDS = 25 * 60
 
-// localStorage 里的键名。
-// localStorage 是一个"字符串到字符串"的字典，所有站点共享同一个空间，
-// 所以键名要自己起得够明确，避免和别的项目撞车。
+// localStorage 里的键名。localStorage 是所有站点共享的"字符串字典"，
+// 所以键名要起得够明确，避免和别的项目撞车。
 const STORAGE_KEY = 'pomodoro.tasks'
 
-// ===========================================================================
-// TODO(你来写·第 1 处)：从 localStorage 读回上次保存的任务
-// ---------------------------------------------------------------------------
-// localStorage 只有一个读接口：localStorage.getItem(键名)
-// 它的特点是：
-//   · 键不存在时返回 null
-//   · 取出来的是【字符串】，不是数组，必须自己解析
-//
-// 你需要写：
-//   1. 用 getItem(STORAGE_KEY) 取出原始字符串
-//   2. 如果拿到的是 null（第一次打开），直接 return initialTasks
-//   3. 用 JSON.parse() 把字符串变回数组
-//   4. 兜底：解析可能失败（比如数据被手动改坏了），所以要用 try / catch，
-//      catch 里 return initialTasks
-//   5. 再兜一层：解析出来的如果不是数组，也 return initialTasks
-//      提示：Array.isArray(解析结果)
-//
-// 为什么必须兜底：localStorage 是用户可见可改的（F12 → Application 里能直接编辑）。
-// 如果数据坏了还直接 JSON.parse，会抛错导致整个页面白屏。
-//
-// 现在这行是"永远返回初始数据"，也就是说还不会持久化。把它改对。
-// ===========================================================================
+// 从 localStorage 读回上次保存的任务。
+// 每一个可能出问题的地方都留了退路 —— 这是读"外部数据"的通用原则。
 function loadTasks(): Task[] {
   const saved = localStorage.getItem(STORAGE_KEY)
 
-  // 第一次打开时键不存在，getItem 返回 null，给初始数据
+  // 第一次打开时键不存在，getItem 返回 null
   if (saved === null) return initialTasks
 
-  // TODO(你来写·第 1 处)：从这里往下才是你要写的东西
-  //   1. 用 JSON.parse(saved) 把字符串变回数组
-  //   2. 包在 try / catch 里 —— 数据可能被手动改坏，解析会抛错，
-  //      catch 里返回 initialTasks（不兜底的话，页面直接白屏）
-  //   3. 再检查一下 Array.isArray(解析结果)，不是数组也返回 initialTasks
-  //   4. 都通过就返回解析结果
-  //
-  // 现在这里直接返回初始数据，所以【还不会恢复上次的任务】，把它改对。
-  return initialTasks
-}
-
-// ===========================================================================
-// TODO(你来写·第 3 处)：这段 id 生成逻辑有个隐藏 bug，加了持久化之后才会暴露
-// ---------------------------------------------------------------------------
-// 现在的算法：idCounter 从 initialTasks 的长度算起（= 3），每调用一次加 1。
-//
-// 问题在哪：
-//   idCounter 是【模块级变量】，只在页面加载时初始化一次，
-//   它并不知道 localStorage 里已经有几条任务、最大的 id 是多少。
-//
-// 具体会怎么爆：
-//   1. 你加了 4 条任务，最后一条的 id 是 7
-//   2. 刷新页面 → tasks 从 localStorage 读回，id 是 1~7
-//   3. 但 idCounter 又被重新初始化成 3
-//   4. 再加一条新任务 → id = 4 → 【和已有的 id 4 撞了】
-//
-// 症状：
-//   · 控制台报 "Encountered two children with the same key"
-//   · 点某一条任务打勾，结果另一条也变了（React 认错了元素）
-//
-// 怎么修（方向）：
-//   别在模块级维护计数器。id 应该"从当前 tasks 里现算出来"——
-//   把 createId 去掉，改成在 addTask 的 setTasks 更新函数里算下一个 id。
-//   这样无论数据从哪来、有多少条，算出来的 id 一定不会重复。
-// ===========================================================================
-let idCounter = initialTasks.length
-
-function createId() {
-  idCounter = idCounter + 1
-  return idCounter
+  try {
+    const parsed = JSON.parse(saved)
+    // 能解析成功不等于它就是任务数组，再兜一层
+    if (Array.isArray(parsed)) return parsed as Task[]
+    return initialTasks
+  } catch {
+    // 数据被改坏导致解析抛错时退回去，而不是让页面白屏
+    return initialTasks
+  }
 }
 
 export default function App() {
-  // 注意这里是 useState(loadTasks)，传的是"函数本身"，不是 useState(loadTasks())。
-  // 这叫"惰性初始化"：React 只会在第一次渲染时调用 loadTasks 一次。
-  // 如果写成 loadTasks()，那么每次渲染都会读一遍 localStorage + 解析一遍 JSON，
-  // 纯属浪费（结果还一样）。
+  // 传的是"函数本身"而不是 loadTasks()，这叫惰性初始化：
+  // React 只在第一次渲染时调用它一次。
+  // 写成 loadTasks() 的话，每次渲染都会读一遍 localStorage + 解析一遍 JSON。
   const [tasks, setTasks] = useState<Task[]>(loadTasks)
 
   const [draft, setDraft] = useState('')
@@ -129,7 +76,12 @@ export default function App() {
     const title = draft.trim()
     if (title === '') return
 
-    setTasks((prev) => [...prev, { id: createId(), title, done: false }])
+    setTasks((prev) => {
+      // 新 id = 现有最大的 id + 1，只能"从数据里现算"。
+      // 不能用 prev.length + 1：删掉一条再新增，长度对不上最大的 id，就会撞车。
+      const nextId = Math.max(0, ...prev.map((task) => task.id)) + 1
+      return [...prev, { id: nextId, title, done: false }]
+    })
     setDraft('')
   }
 
@@ -159,32 +111,18 @@ export default function App() {
   }, [isRunning])
 
   // effect 2：只管"到 0 就停"。
-  // 这里没有定时器、没有请求，只是"监听 secondsLeft 的变化"——
-  // 这是 useEffect 最常用的第二种形态。
+  // 这里没有定时器、没有请求，只是"监听 secondsLeft 的变化"。
   useEffect(() => {
     if (secondsLeft === 0) setIsRunning(false)
   }, [secondsLeft])
 
-  // =========================================================================
-  // TODO(你来写·第 2 处)：把 tasks 存进 localStorage
-  // -------------------------------------------------------------------------
-  // 要做的事情很简单，只有一行：
-  //   localStorage.setItem(键名, JSON.stringify(tasks))
-  //
-  // 为什么用 JSON.stringify：localStorage 只能存字符串，
-  //   而 tasks 是数组，必须先序列化。
-  //
-  // 为什么依赖数组是 [tasks]：
-  //   意思是"只要 tasks 变了，就重新执行一次这个 effect"——
-  //   于是每次增、删、改任务之后，最新的数据都会自动写进去。
-  //   这就是"监听状态变化"这种 effect 的典型用法。
-  //
-  // 注意整体的数据流是【单向】的：
-  //   启动时读一次（loadTasks，只在首次渲染）+ 变化时写一次（这个 effect）
-  //   不要试图让 localStorage 变成"数据源"，它只是一个备份仓库。
-  // =========================================================================
+  // effect 3：监听 tasks 的变化，把它写进 localStorage。
+  // 为什么用 JSON.stringify：localStorage 只能存字符串，数组必须先序列化。
+  // 注意整个数据流是单向的：
+  //   启动时读一次（loadTasks）+ 变化时写一次（这个 effect）。
+  //   不要让 localStorage 变成"数据源"，它只是一个备份仓库。
   useEffect(() => {
-    // 在下面写
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
   }, [tasks])
 
   const doneCount = tasks.filter((task) => task.done).length
