@@ -85,9 +85,28 @@ src/
 
 ## 部署
 
-静态站点，构建产物在 `dist/`，可以直接放到任何静态托管（Vercel / Netlify / GitHub Pages）。
+### 线上地址
 
-注意：如果托管平台让你指定项目根目录，要填 `projects/01-pomodoro`（因为仓库里还有别的项目）。
+**https://my-study-d3gp0xf9k10ac193e-1316476241.tcloudbaseapp.com/**
+
+部署在腾讯云 CloudBase 静态网站托管（国内节点，访问快）。
+完整流程与排错记录见仓库根目录的 `docs/部署指南.md`。
+
+### 部署命令
+
+```bash
+npm run build                              # 生产构建
+tcb env use my-study-d3gp0xf9k10ac193e     # 绑定环境（只需一次）
+tcb hosting deploy ./dist --verify         # 上传并校验
+```
+
+> `tcb hosting deploy` 只上传文件、不做构建，所以**必须先 `npm run build`**。
+
+### 换其他平台的话
+
+构建产物在 `dist/`，任何静态托管都能用（Vercel / Netlify / GitHub Pages）。
+
+注意：如果平台让你指定项目根目录，要填 `projects/01-pomodoro`（因为仓库根目录还有别的项目）。
 
 ## 已知限制
 
